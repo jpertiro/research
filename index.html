@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reaction Time Test</title>
+
+  <!-- Layout & Styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 40px 10px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    #reaction-game-wrapper {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    #reaction-game-screen {
+      width: 100%;
+      height: 300px;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    #reaction-game-instructions,
+    #reaction-game-result {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px 40px;
+      border-radius: 8px;
+      text-align: center;
+      z-index: 10;
+      max-width: 80%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #reaction-game-instructions h1 {
+      margin-top: 0;
+      font-size: 2.2em;
+    }
+
+    #reaction-game-instructions ul {
+      text-align: left;
+      display: inline-block;
+      margin: 10px auto;
+    }
+
+    #reaction-game-time {
+      font-size: 2em;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    #reaction-game-start,
+    #reaction-game-restart {
+      padding: 10px 20px;
+      background-color: #006403;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-top: 10px;
+      transition: background-color 0.2s ease;
+    }
+
+    #reaction-game-start:disabled,
+    #reaction-game-restart:disabled {
+      background-color: #999;
+      cursor: default;
+    }
+
+    #reaction-game-start:hover:not(:disabled),
+    #reaction-game-restart:hover:not(:disabled),
+    #reaction-game-start:focus:not(:disabled),
+    #reaction-game-restart:focus:not(:disabled) {
+      background-color: #008d05;
+      outline: none;
+    }
+
+    #reaction-game-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    #reaction-game-summary {
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .reaction-game-stat-box {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 15px 20px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .reaction-game-stat-label {
+      display: block;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+      color: #666;
+    }
+
+    .reaction-game-stat-value {
+      display: block;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #reaction-game-chart-container {
+      flex: 1;
+      min-width: 300px;
+      height: 250px;
+      margin-right: 20px;
+      margin-bottom: 20px;
+    }
+
+    #reaction-game-distribution-container {
+      flex: 1;
+      min-width: 300px;
+      height: 250px;
+      margin-bottom: 20px;
+    }
+
+    #reaction-game-table-container {
+      flex: 1;
+      min-width: 220px;
+      max-height: 250px;
+      overflow-y: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      background-color: #ffffff;
+    }
+
+    #reaction-game-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #reaction-game-table th,
+    #reaction-game-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.9em;
+    }
+
+    #reaction-game-table th {
+      background-color: #f2f2f2;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    #reaction-game-controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .reaction-game-secondary-btn {
+      padding: 8px 12px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .reaction-game-secondary-btn:hover {
+      background-color: #e0e0e0;
+    }
+
+    .reaction-game-red {
+      background-color: #ff3333 !important;
+    }
+
+    .reaction-game-green {
+      background-color: #008d05 !important;
+    }
+
+    .reaction-game-wait {
+      background-color: #f0f0f0 !important;
+    }
+
+    .fast-reaction {
+      color: #008d05;
+    }
+
+    .average-reaction {
+      color: #2196F3;
+    }
+
+    .slow-reaction {
+      color: #FFC107;
+    }
+
+    .very-slow-reaction {
+      color: #FF5722;
+    }
+
+    @media (max-width: 768px) {
+      #reaction-game-stats {
+        flex-direction: column;
+      }
+
+      #reaction-game-chart-container,
+      #reaction-game-distribution-container {
+        width: 100%;
+        margin-right: 0;
+      }
+    }
+  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+  <main class="container">
+    <div id="reaction-game-wrapper">
+      <div id="reaction-game-screen">
+        <div id="reaction-game-instructions" style="display: block;">
+          <h1>Reaction Time Test</h1>
+          <p>
+            When the screen changes from
+            <span style="color: #a30000; font-weight: bold;">RED</span>
+            to
+            <span style="color: #006403; font-weight: bold;">GREEN</span>,
+            react as quickly as possible:
+          </p>
+          <ul>
+            <li>Click on the screen</li>
+            <li>Press the spacebar</li>
+            <li>Touch the screen (mobile devices)</li>
+          </ul>
+          <button id="reaction-game-start">Start Game</button>
+        </div>
+
+        <div id="reaction-game-result" style="display: none;">
+          <h2>Your reaction time:</h2>
+          <p id="reaction-game-time">0 ms</p>
+          <p id="reaction-game-benchmark" style="margin-top: 5px; font-size: 0.9em;"></p>
+          <button id="reaction-game-restart">Play Again</button>
+        </div>
+      </div>
+
+      <div id="reaction-game-stats">
+        <div id="reaction-game-summary">
+          <div class="reaction-game-stat-box">
+            <span class="reaction-game-stat-label">Best time:</span>
+            <span id="reaction-game-best" class="reaction-game-stat-value">-</span>
+          </div>
+          <div class="reaction-game-stat-box">
+            <span class="reaction-game-stat-label">Average:</span>
+            <span id="reaction-game-average" class="reaction-game-stat-value">-</span>
+          </div>
+          <div class="reaction-game-stat-box">
+            <span class="reaction-game-stat-label">Attempts:</span>
+            <span id="reaction-game-attempts" class="reaction-game-stat-value">0</span>
+          </div>
+        </div>
+
+        <div id="reaction-game-chart-container">
+          <canvas id="reaction-game-chart"></canvas>
+        </div>
+        <div id="reaction-game-distribution-container">
+          <canvas id="reaction-game-distribution"></canvas>
+        </div>
+        <div id="reaction-game-table-container">
+          <table id="reaction-game-table">
+            <thead>
+              <tr>
+                <th>Attempt</th>
+                <th>Time (ms)</th>
+                <th>Comparison</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="reaction-game-controls">
+        <button id="reaction-game-reset-stats" class="reaction-game-secondary-btn">
+          Reset Statistics
+        </button>
+        <button id="reaction-game-export" class="reaction-game-secondary-btn">
+          Export Results
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const reactionGameScreen = document.getElementById('reaction-game-screen');
+      const reactionGameInstructions = document.getElementById('reaction-game-instructions');
+      const reactionGameStart = document.getElementById('reaction-game-start');
+      const reactionGameResult = document.getElementById('reaction-game-result');
+      const reactionGameTime = document.getElementById('reaction-game-time');
+      const reactionGameBenchmark = document.getElementById('reaction-game-benchmark');
+      const reactionGameRestart = document.getElementById('reaction-game-restart');
+      const reactionGameTable = document.getElementById('reaction-game-table').querySelector('tbody');
+      const reactionGameBest = document.getElementById('reaction-game-best');
+      const reactionGameAverage = document.getElementById('reaction-game-average');
+      const reactionGameAttempts = document.getElementById('reaction-game-attempts');
+      const reactionGameResetStats = document.getElementById('reaction-game-reset-stats');
+      const reactionGameExport = document.getElementById('reaction-game-export');
+
+      let gameState = 'idle';
+      let changeTimeout = null;
+      let startTime = 0;
+      let reactionTimes = [];
+      let reactionChart = null;
+      let distributionChart = null;
+
+      const MAX_ATTEMPTS = 10;         // Hard limit
+      let attemptsThisSession = 0;     // Counts valid trials
+
+      const benchmarks = {
+        excellent: 200,
+        good: 250,
+        average: 300,
+        belowAverage: 350,
+        slow: 400
+      };
+
+      function initializeChart() {
+        const ctx = document.getElementById('reaction-game-chart').getContext('2d');
+        reactionChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Reaction Time (ms)',
+              data: [],
+              borderColor: '#008d05',
+              backgroundColor: 'rgba(76, 175, 80, 0.2)',
+              tension: 0.1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Time (ms)'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Attempt'
+                }
+              }
+            }
+          }
+        });
+      }
+
+      function initializeDistributionChart() {
+        const ctx = document.getElementById('reaction-game-distribution').getContext('2d');
+        distributionChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Reaction Time Distribution',
+              data: [],
+              backgroundColor: 'rgba(33, 150, 243, 0.5)',
+              borderColor: 'rgba(33, 150, 243, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Frequency'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Time Ranges (ms)'
+                }
+              }
+            }
+          }
+        });
+      }
+
+      function updateStats() {
+        updateChart();
+        updateDistributionChart();
+        updateTable();
+        updateSummary();
+      }
+
+      function updateChart() {
+        if (!reactionChart) {
+          initializeChart();
+        }
+
+        const displayData = reactionTimes.slice(-20);
+        reactionChart.data.labels = displayData.map((_, index) =>
+          `${reactionTimes.length - displayData.length + index + 1}`
+        );
+        reactionChart.data.datasets[0].data = displayData;
+        reactionChart.update();
+      }
+
+      function updateDistributionChart() {
+        if (!distributionChart) {
+          initializeDistributionChart();
+        }
+
+        if (reactionTimes.length < 2) {
+          distributionChart.data.labels = [];
+          distributionChart.data.datasets[0].data = [];
+          distributionChart.update();
+          return;
+        }
+
+        const min = Math.min(...reactionTimes);
+        const max = Math.max(...reactionTimes);
+        const range = max - min;
+        const binWidth = Math.max(10, Math.round(range / 10));
+
+        const bins = {};
+        const labels = [];
+
+        const binStart = Math.floor(min / 10) * 10;
+
+        for (let i = 0; i < 10; i++) {
+          const start = binStart + (i * binWidth);
+          const end = start + binWidth;
+          const label = `${start}-${end}`;
+          labels.push(label);
+          bins[label] = 0;
+        }
+
+        reactionTimes.forEach(time => {
+          for (let i = 0; i < 10; i++) {
+            const start = binStart + (i * binWidth);
+            const end = start + binWidth;
+            const label = labels[i];
+
+            if (time >= start && (time < end || (i === 9 && time <= end))) {
+              bins[label]++;
+              break;
+            }
+          }
+        });
+
+        distributionChart.data.labels = labels;
+        distributionChart.data.datasets[0].data = Object.values(bins);
+        distributionChart.update();
+      }
+
+      function updateTable() {
+        reactionGameTable.innerHTML = '';
+
+        const displayTimes = reactionTimes.slice(-500).reverse();
+
+        displayTimes.forEach((time, index) => {
+          const row = document.createElement('tr');
+
+          const attemptCell = document.createElement('td');
+          attemptCell.textContent = reactionTimes.length - index;
+          row.appendChild(attemptCell);
+
+          const timeCell = document.createElement('td');
+          timeCell.textContent = `${time} ms`;
+          row.appendChild(timeCell);
+
+          const comparisonCell = document.createElement('td');
+          let comparisonText = '';
+          let className = '';
+
+          if (time < benchmarks.excellent) {
+            comparisonText = 'Excellent';
+            className = 'fast-reaction';
+          } else if (time < benchmarks.good) {
+            comparisonText = 'Very Good';
+            className = 'fast-reaction';
+          } else if (time < benchmarks.average) {
+            comparisonText = 'Good';
+            className = 'average-reaction';
+          } else if (time < benchmarks.belowAverage) {
+            comparisonText = 'Average';
+            className = 'average-reaction';
+          } else if (time < benchmarks.slow) {
+            comparisonText = 'Slow';
+            className = 'slow-reaction';
+          } else {
+            comparisonText = 'Very Slow';
+            className = 'very-slow-reaction';
+          }
+
+          comparisonCell.textContent = comparisonText;
+          comparisonCell.className = className;
+          row.appendChild(comparisonCell);
+
+          reactionGameTable.appendChild(row);
+        });
+      }
+
+      function updateSummary() {
+        if (reactionTimes.length > 0) {
+          const bestTime = Math.min(...reactionTimes);
+          const average = reactionTimes.reduce((sum, time) => sum + time, 0) / reactionTimes.length;
+
+          reactionGameBest.textContent = `${bestTime} ms`;
+          reactionGameAverage.textContent = `${Math.round(average)} ms`;
+          reactionGameAttempts.textContent = reactionTimes.length;
+        } else {
+          reactionGameBest.textContent = '-';
+          reactionGameAverage.textContent = '-';
+          reactionGameAttempts.textContent = '0';
+        }
+      }
+
+      function getBenchmarkText(time) {
+        if (time < benchmarks.excellent) {
+          return 'Your time is excellent, faster than 90% of people!';
+        } else if (time < benchmarks.good) {
+          return 'Very good time, faster than 75% of people.';
+        } else if (time < benchmarks.average) {
+          return 'Good time, faster than average.';
+        } else if (time < benchmarks.belowAverage) {
+          return 'Your time is average.';
+        } else if (time < benchmarks.slow) {
+          return 'Your time is slightly slower than average.';
+        } else {
+          return 'Your time is slower than average, keep practicing!';
+        }
+      }
+
+      function startGame() {
+        if (attemptsThisSession >= MAX_ATTEMPTS) {
+          reactionGameInstructions.style.display = 'none';
+          reactionGameResult.style.display = 'block';
+          reactionGameTime.textContent = 'You finished this task.';
+          reactionGameBenchmark.textContent = '';
+          return;
+        }
+
+        gameState = 'waiting';
+        reactionGameInstructions.style.display = 'none';
+        reactionGameResult.style.display = 'none';
+
+        reactionGameScreen.className = 'reaction-game-wait';
+        reactionGameScreen.style.backgroundColor = '';
+
+        setTimeout(() => {
+          gameState = 'ready';
+          reactionGameScreen.style.backgroundColor = '';
+          reactionGameScreen.className = 'reaction-game-red';
+
+          const randomDelay = Math.floor(Math.random() * 3000) + 2000; // 2–5s
+          changeTimeout = setTimeout(() => {
+            gameState = 'active';
+            startTime = Date.now();
+            reactionGameScreen.style.backgroundColor = '';
+            reactionGameScreen.className = 'reaction-game-green';
+          }, randomDelay);
+        }, 500);
+      }
+
+      function handleReaction() {
+        if (attemptsThisSession >= MAX_ATTEMPTS) {
+          return;
+        }
+
+        if (gameState === 'waiting' || gameState === 'ready') {
+          clearTimeout(changeTimeout);
+          gameState = 'idle';
+          reactionGameScreen.className = '';
+          reactionGameScreen.style.backgroundColor = '#f0f0f0';
+          reactionGameResult.style.display = 'block';
+          reactionGameTime.textContent = 'Too early! Try again.';
+          reactionGameBenchmark.textContent = '';
+          reactionGameRestart.focus();
+        } else if (gameState === 'active') {
+          const endTime = Date.now();
+          const reactionTime = endTime - startTime;
+
+          attemptsThisSession++;
+          reactionTimes.push(reactionTime);
+          updateStats();
+
+          gameState = 'idle';
+          reactionGameScreen.className = '';
+          reactionGameScreen.style.backgroundColor = '#f0f0f0';
+          reactionGameResult.style.display = 'block';
+          reactionGameTime.textContent = `${reactionTime} ms`;
+
+          if (attemptsThisSession >= MAX_ATTEMPTS) {
+            reactionGameBenchmark.textContent = 'You finished this task.';
+            reactionGameStart.disabled = true;
+            reactionGameRestart.disabled = true;
+          } else {
+            reactionGameBenchmark.textContent = getBenchmarkText(reactionTime);
+          }
+
+          reactionGameRestart.focus();
+        }
+      }
+
+      function handleClick(e) {
+        if (
+          e.target === reactionGameResult ||
+          reactionGameResult.contains(e.target) ||
+          e.target === reactionGameRestart ||
+          e.target === reactionGameInstructions ||
+          reactionGameInstructions.contains(e.target) ||
+          e.target === reactionGameStart
+        ) {
+          return;
+        }
+
+        if (gameState !== 'idle') {
+          handleReaction();
+        }
+      }
+
+      function handleKeyPress(e) {
+        if (attemptsThisSession >= MAX_ATTEMPTS) {
+          return;
+        }
+
+        if (e.code === 'Space' || e.keyCode === 32) {
+          e.preventDefault();
+
+          if (reactionGameResult.style.display === 'block') {
+            if (!reactionGameRestart.disabled) {
+              reactionGameRestart.click();
+            }
+            return;
+          }
+
+          if (reactionGameInstructions.style.display === 'block') {
+            if (!reactionGameStart.disabled) {
+              reactionGameStart.click();
+            }
+            return;
+          }
+
+          if (gameState !== 'idle') {
+            handleReaction();
+          }
+        }
+      }
+
+      function exportResults() {
+        if (reactionTimes.length === 0) {
+          alert('No data to export.');
+          return;
+        }
+
+        const bestTime = Math.min(...reactionTimes);
+        const average = reactionTimes.reduce((sum, time) => sum + time, 0) / reactionTimes.length;
+
+        let csv = 'Attempt,Time (ms)\n';
+        reactionTimes.forEach((time, index) => {
+          csv += `${index + 1},${time}\n`;
+        });
+
+        csv += `\nBest time,${bestTime}\n`;
+        csv += `Average,${Math.round(average)}\n`;
+        csv += `Total attempts,${reactionTimes.length}\n`;
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'reaction_times.csv');
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Event Listener
+      reactionGameScreen.addEventListener('click', handleClick);
+      document.addEventListener('keydown', handleKeyPress);
+
+      document.addEventListener('touchstart', function (e) {
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (element === reactionGameScreen || reactionGameScreen.contains(element)) {
+          if (
+            !(
+              reactionGameResult.contains(element) ||
+              element === reactionGameRestart ||
+              reactionGameInstructions.contains(element) ||
+              element === reactionGameStart
+            )
+          ) {
+            if (gameState !== 'idle') {
+              handleReaction();
+            }
+          }
+        }
+      });
+
+      reactionGameStart.addEventListener('click', startGame);
+      reactionGameRestart.addEventListener('click', startGame);
+
+      reactionGameResetStats.addEventListener('click', function () {
+        if (attemptsThisSession >= MAX_ATTEMPTS) {
+          alert('This task is finished. Statistics cannot be reset.');
+          return;
+        }
+
+        if (confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+          reactionTimes = [];
+          reactionGameTable.innerHTML = '';
+
+          if (reactionChart) {
+            reactionChart.data.labels = [];
+            reactionChart.data.datasets[0].data = [];
+            reactionChart.update();
+          }
+          if (distributionChart) {
+            distributionChart.data.labels = [];
+            distributionChart.data.datasets[0].data = [];
+            distributionChart.update();
+          }
+
+          updateSummary();
+        }
+      });
+
+      reactionGameExport.addEventListener('click', exportResults);
+
+      // Init
+      initializeChart();
+      initializeDistributionChart();
+      updateSummary();
+      reactionGameStart.focus();
+    })();
+  </script>
+</body>
+</html>
