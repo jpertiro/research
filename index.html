@@ -13,6 +13,67 @@
       margin: 0;
       padding: 40px 10px;
     }
+    /* UID-Eingabezeile */
+    #uid-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    #uid-wrapper label {
+      font-weight: bold;
+    }
+
+    #uid-input {
+      flex: 1;
+      max-width: 250px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.95em;
+    }
+
+    /* Wenn UID "gesendet" wurde: leicht ausgegraut */
+    #uid-input.uid-disabled {
+      background-color: #f0f0f0;
+      color: #777;
+    }
+
+    /* Runder Button mit Pfeil / Häkchen */
+    .uid-send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background-color: #007bff; /* blau */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .uid-send-btn::before {
+      content: "➤"; /* Pfeil */
+      color: #ffffff;
+      font-size: 1.1em;
+    }
+
+    .uid-send-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Zustand nach "Senden": grün + Häkchen */
+    .uid-send-btn.sent {
+      background-color: #28a745; /* grün */
+      cursor: default;
+    }
+
+    .uid-send-btn.sent::before {
+      content: "✓"; /* Häkchen */
+    }
 
     .container {
       max-width: 1200px;
@@ -249,6 +310,22 @@
 <body>
   <main class="container">
     <div id="reaction-game-wrapper">
+       <!-- UID-Eingabe -->
+    <div id="uid-wrapper">
+      <label for="uid-input">Enter UID:</label>
+      <input
+        id="uid-input"
+        type="text"
+        placeholder="Type your UID here"
+      />
+      <button
+        id="uid-send-btn"
+        type="button"
+        aria-label="Send UID"
+        class="uid-send-btn"
+      ></button>
+    </div>
+    <!-- Bisheriger Reaction-Time-Screen -->
       <div id="reaction-game-screen">
         <div id="reaction-game-instructions" style="display: block;">
           <h1>Earn your in-game money!</h1>
@@ -335,6 +412,9 @@
       const reactionGameAttempts = document.getElementById('reaction-game-attempts');
       const reactionGameResetStats = document.getElementById('reaction-game-reset-stats');
       const reactionGameExport = document.getElementById('reaction-game-export');
+      const uidInput = document.getElementById('uid-input');
+      const uidSendBtn = document.getElementById('uid-send-btn');
+
 
       let gameState = 'idle';
       let changeTimeout = null;
@@ -773,6 +853,23 @@
       });
 
       reactionGameExport.addEventListener('click', exportResults);
+      // UID "senden" (nur optisch)
+      uidSendBtn.addEventListener('click', function () {
+        const value = uidInput.value.trim();
+
+        // Wenn nichts eingegeben wurde: nichts tun, aber Input fokussieren
+        if (!value) {
+          uidInput.focus();
+          return;
+        }
+
+        // Feld sperren und optisch ausgrauen
+        uidInput.disabled = true;
+        uidInput.classList.add('uid-disabled');
+
+        // Button auf "gesendet" umstellen (grün mit Häkchen)
+        uidSendBtn.classList.add('sent');
+      });
 
       // Init
       initializeChart();
