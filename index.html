@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Initial Task</title>
+  <title>Reaction Time Test</title>
 
   <!-- Layout & Styles -->
   <style>
@@ -377,7 +377,7 @@
               <tr>
                 <th>Attempt</th>
                 <th>Time (ms)</th>
-                <th>Comparison</th>
+                <th>Earnings</th>
               </tr>
             </thead>
             <tbody>
@@ -387,9 +387,6 @@
       </div>
 
       <div id="reaction-game-controls">
-        <button id="reaction-game-reset-stats" class="reaction-game-secondary-btn">
-          Reset Statistics
-        </button>
         <button id="reaction-game-export" class="reaction-game-secondary-btn">
           Export Results
         </button>
@@ -410,7 +407,6 @@
       const reactionGameBest = document.getElementById('reaction-game-best');
       const reactionGameAverage = document.getElementById('reaction-game-average');
       const reactionGameAttempts = document.getElementById('reaction-game-attempts');
-      const reactionGameResetStats = document.getElementById('reaction-game-reset-stats');
       const reactionGameExport = document.getElementById('reaction-game-export');
       const uidInput = document.getElementById('uid-input');
       const uidSendBtn = document.getElementById('uid-send-btn');
@@ -425,6 +421,11 @@
 
       const MAX_ATTEMPTS = 10;         // Hard limit
       let attemptsThisSession = 0;     // Counts valid trials
+      const TOTAL_GAME_YEN = 7500;
+      const GAME_YEN_BASE = [698, 719, 747, 732, 764, 750, 722, 795, 783, 790]; // must contain exactly 10 values
+      let gameYenSequence = []; // will be generated at init
+      let gameYenAwards = []; // one per valid trial, same order as reactionTimes
+
 
       const benchmarks = {
         excellent: 200,
@@ -578,6 +579,7 @@
         reactionGameTable.innerHTML = '';
 
         const displayTimes = reactionTimes.slice(-500).reverse();
+        const displayYen = gameYenAwards.slice(-500).reverse();
 
         displayTimes.forEach((time, index) => {
           const row = document.createElement('tr');
@@ -591,32 +593,11 @@
           row.appendChild(timeCell);
 
           const comparisonCell = document.createElement('td');
-          let comparisonText = '';
-          let className = '';
-
-          if (time < benchmarks.excellent) {
-            comparisonText = 'Excellent';
-            className = 'fast-reaction';
-          } else if (time < benchmarks.good) {
-            comparisonText = 'Very Good';
-            className = 'fast-reaction';
-          } else if (time < benchmarks.average) {
-            comparisonText = 'Good';
-            className = 'average-reaction';
-          } else if (time < benchmarks.belowAverage) {
-            comparisonText = 'Average';
-            className = 'average-reaction';
-          } else if (time < benchmarks.slow) {
-            comparisonText = 'Slow';
-            className = 'slow-reaction';
-          } else {
-            comparisonText = 'Very Slow';
-            className = 'very-slow-reaction';
-          }
-
-          comparisonCell.textContent = comparisonText;
-          comparisonCell.className = className;
+          const yen = displayYen[index];
+          comparisonCell.textContent = `${yen} In-Game ¥`;
+          comparisonCell.className = '';
           row.appendChild(comparisonCell);
+
 
           reactionGameTable.appendChild(row);
         });
@@ -653,12 +634,34 @@
         }
       }
 
+      function shuffleArray(arr) {
+        const a = arr.slice(); // copy
+        for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+        function buildYenSequenceMaxinLast3(baseValues) {
+            const maxValue = Math.max(...baseValues); 
+            // remove ONE occurrence of max (in case there are duplicates)
+            const remaining = baseValues.slice();
+            const maxIndex = remaining.indexOf(maxValue);
+            remaining.splice(maxIndex, 1);
+            
+            const shuffled = shuffleArray(remaining);
+            const insertIndex = 7 + Math.floor(Math.random() * 3); // 7, 8, or 9
+            shuffled.splice(insertIndex, 0, maxValue);
+            return shuffled;
+
+        }
+
       function startGame() {
         if (attemptsThisSession >= MAX_ATTEMPTS) {
           reactionGameInstructions.style.display = 'none';
           reactionGameResult.style.display = 'block';
-          reactionGameTime.textContent = 'You finished this task.';
-          reactionGameBenchmark.textContent = '';
+          reactionGameTime.textContent = `Task finished.`;
+          reactionGameBenchmark.textContent = `Congratulations! You earned ${TOTAL_GAME_YEN} In-Game ¥ in total.`;
           return;
         }
 
@@ -699,12 +702,14 @@
           reactionGameBenchmark.textContent = '';
           reactionGameRestart.focus();
         } else if (gameState === 'active') {
-          const endTime = Date.now();
-          const reactionTime = endTime - startTime;
+            const endTime = Date.now();
+            const reactionTime = endTime - startTime;
+            const trialIndex = attemptsThisSession; // 0..9
+            const yenAward = gameYenSequence[trialIndex];
 
-          attemptsThisSession++;
-          reactionTimes.push(reactionTime);
-          updateStats();
+             attemptsThisSession++;
+             reactionTimes.push(reactionTime);
+            gameYenAwards.push(yenAward);
 
           gameState = 'idle';
           reactionGameScreen.className = '';
@@ -713,14 +718,18 @@
           reactionGameTime.textContent = `${reactionTime} ms`;
 
           if (attemptsThisSession >= MAX_ATTEMPTS) {
-            reactionGameBenchmark.textContent = 'You finished this task.';
+            reactionGameBenchmark.innerHTML =
+            `You earned <b>${yenAward}</b> In-Game ¥.<br>` +
+            `Congratulations! You earned <b>${TOTAL_GAME_YEN}</b> In-Game ¥ in total.`;
             reactionGameStart.disabled = true;
             reactionGameRestart.disabled = true;
-          } else {
-            reactionGameBenchmark.textContent = getBenchmarkText(reactionTime);
-          }
+        } else {
+            reactionGameBenchmark.textContent = `You earned ${yenAward} In-Game ¥.`;
+        }
+          updateStats();
 
           reactionGameRestart.focus();
+
         }
       }
 
@@ -792,7 +801,7 @@
         const url = URL.createObjectURL(blob);
 
         link.setAttribute('href', url);
-        link.setAttribute('download', 'reaction_times.csv');
+        link.setAttribute('download', 'ingame_money.csv');
         link.style.visibility = 'hidden';
 
         document.body.appendChild(link);
@@ -827,31 +836,6 @@
       reactionGameStart.addEventListener('click', startGame);
       reactionGameRestart.addEventListener('click', startGame);
 
-      reactionGameResetStats.addEventListener('click', function () {
-        if (attemptsThisSession >= MAX_ATTEMPTS) {
-          alert('This task is finished. Statistics cannot be reset.');
-          return;
-        }
-
-        if (confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
-          reactionTimes = [];
-          reactionGameTable.innerHTML = '';
-
-          if (reactionChart) {
-            reactionChart.data.labels = [];
-            reactionChart.data.datasets[0].data = [];
-            reactionChart.update();
-          }
-          if (distributionChart) {
-            distributionChart.data.labels = [];
-            distributionChart.data.datasets[0].data = [];
-            distributionChart.update();
-          }
-
-          updateSummary();
-        }
-      });
-
       reactionGameExport.addEventListener('click', exportResults);
       // UID "senden" (nur optisch)
       uidSendBtn.addEventListener('click', function () {
@@ -872,6 +856,7 @@
       });
 
       // Init
+      gameYenSequence = buildYenSequenceMaxinLast3(GAME_YEN_BASE);
       initializeChart();
       initializeDistributionChart();
       updateSummary();
@@ -880,4 +865,3 @@
   </script>
 </body>
 </html>
-
